@@ -1,0 +1,410 @@
+import { Student, Room, Complaint, LeaveRequest } from '@/types';
+
+// Students Mock Data
+export const mockStudents: Student[] = [
+  {
+    id: '1',
+    name: 'Rahul Kumar',
+    email: 'rahul.kumar@medhavi.edu',
+    phone: '+91 9876543210',
+    enrollmentNumber: 'MSU2024001',
+    course: 'B.Tech Computer Science',
+    year: 2,
+    roomNumber: 'A-204',
+    guardianName: 'Mr. Rajesh Kumar',
+    guardianPhone: '+91 9876543211',
+    address: '123 MG Road, New Delhi, Delhi 110001',
+  },
+  {
+    id: '2',
+    name: 'Priya Sharma',
+    email: 'priya.sharma@medhavi.edu',
+    phone: '+91 9876543212',
+    enrollmentNumber: 'MSU2024002',
+    course: 'BBA',
+    year: 1,
+    roomNumber: 'B-105',
+    guardianName: 'Mr. Amit Sharma',
+    guardianPhone: '+91 9876543213',
+    address: '456 Marine Drive, Mumbai, Maharashtra 400020',
+  },
+  {
+    id: '3',
+    name: 'Amit Patel',
+    email: 'amit.patel@medhavi.edu',
+    phone: '+91 9876543214',
+    enrollmentNumber: 'MSU2024003',
+    course: 'B.Sc Physics',
+    year: 3,
+    roomNumber: 'A-305',
+    guardianName: 'Mr. Suresh Patel',
+    guardianPhone: '+91 9876543215',
+    address: '789 Relief Road, Ahmedabad, Gujarat 380001',
+  },
+  {
+    id: '4',
+    name: 'Sneha Reddy',
+    email: 'sneha.reddy@medhavi.edu',
+    phone: '+91 9876543216',
+    enrollmentNumber: 'MSU2024004',
+    course: 'B.Tech Mechanical',
+    year: 2,
+    roomNumber: 'B-204',
+    guardianName: 'Mr. Krishna Reddy',
+    guardianPhone: '+91 9876543217',
+    address: '321 Jubilee Hills, Hyderabad, Telangana 500033',
+  },
+  {
+    id: '5',
+    name: 'Arjun Singh',
+    email: 'arjun.singh@medhavi.edu',
+    phone: '+91 9876543218',
+    enrollmentNumber: 'MSU2024005',
+    course: 'MBA',
+    year: 1,
+    roomNumber: 'A-101',
+    guardianName: 'Mrs. Lakshmi Singh',
+    guardianPhone: '+91 9876543219',
+    address: '654 Park Street, Kolkata, West Bengal 700016',
+  },
+  {
+    id: '6',
+    name: 'Anjali Verma',
+    email: 'anjali.verma@medhavi.edu',
+    phone: '+91 9876543220',
+    enrollmentNumber: 'MSU2024006',
+    course: 'B.Com',
+    year: 2,
+    roomNumber: 'B-305',
+    guardianName: 'Mr. Ravi Verma',
+    guardianPhone: '+91 9876543221',
+    address: '987 Civil Lines, Jaipur, Rajasthan 302006',
+  },
+  {
+    id: '7',
+    name: 'Karthik Krishnan',
+    email: 'karthik.krishnan@medhavi.edu',
+    phone: '+91 9876543222',
+    enrollmentNumber: 'MSU2024007',
+    course: 'B.Tech Electronics',
+    year: 3,
+    roomNumber: 'A-204',
+    guardianName: 'Mr. Krishnan Iyer',
+    guardianPhone: '+91 9876543223',
+    address: '234 Anna Nagar, Chennai, Tamil Nadu 600040',
+  },
+  {
+    id: '8',
+    name: 'Meera Nair',
+    email: 'meera.nair@medhavi.edu',
+    phone: '+91 9876543224',
+    enrollmentNumber: 'MSU2024008',
+    course: 'B.Sc Chemistry',
+    year: 1,
+    roomNumber: 'B-105',
+    guardianName: 'Dr. Suresh Nair',
+    guardianPhone: '+91 9876543225',
+    address: '567 MG Road, Kochi, Kerala 682011',
+  },
+];
+
+// Rooms Mock Data
+export const mockRooms: Room[] = [
+  { 
+    id: '1', 
+    number: 'A-101', 
+    floor: 1, 
+    capacity: 2, 
+    occupied: 1, 
+    type: 'double', 
+    status: 'occupied', 
+    hostel: 'Block A',
+    students: [mockStudents[4]]
+  },
+  { 
+    id: '2', 
+    number: 'A-102', 
+    floor: 1, 
+    capacity: 2, 
+    occupied: 0, 
+    type: 'double', 
+    status: 'available', 
+    hostel: 'Block A' 
+  },
+  { 
+    id: '3', 
+    number: 'A-103', 
+    floor: 1, 
+    capacity: 2, 
+    occupied: 0, 
+    type: 'double', 
+    status: 'maintenance', 
+    hostel: 'Block A' 
+  },
+  { 
+    id: '4', 
+    number: 'A-104', 
+    floor: 1, 
+    capacity: 1, 
+    occupied: 0, 
+    type: 'single', 
+    status: 'available', 
+    hostel: 'Block A' 
+  },
+  { 
+    id: '5', 
+    number: 'A-204', 
+    floor: 2, 
+    capacity: 2, 
+    occupied: 2, 
+    type: 'double', 
+    status: 'occupied', 
+    hostel: 'Block A',
+    students: [mockStudents[0], mockStudents[6]]
+  },
+  { 
+    id: '6', 
+    number: 'A-205', 
+    floor: 2, 
+    capacity: 2, 
+    occupied: 0, 
+    type: 'double', 
+    status: 'available', 
+    hostel: 'Block A' 
+  },
+  { 
+    id: '7', 
+    number: 'A-305', 
+    floor: 3, 
+    capacity: 3, 
+    occupied: 1, 
+    type: 'triple', 
+    status: 'occupied', 
+    hostel: 'Block A',
+    students: [mockStudents[2]]
+  },
+  { 
+    id: '8', 
+    number: 'B-105', 
+    floor: 1, 
+    capacity: 2, 
+    occupied: 2, 
+    type: 'double', 
+    status: 'occupied', 
+    hostel: 'Block B',
+    students: [mockStudents[1], mockStudents[7]]
+  },
+  { 
+    id: '9', 
+    number: 'B-106', 
+    floor: 1, 
+    capacity: 2, 
+    occupied: 0, 
+    type: 'double', 
+    status: 'reserved', 
+    hostel: 'Block B' 
+  },
+  { 
+    id: '10', 
+    number: 'B-204', 
+    floor: 2, 
+    capacity: 3, 
+    occupied: 1, 
+    type: 'triple', 
+    status: 'occupied', 
+    hostel: 'Block B',
+    students: [mockStudents[3]]
+  },
+  { 
+    id: '11', 
+    number: 'B-305', 
+    floor: 3, 
+    capacity: 2, 
+    occupied: 1, 
+    type: 'double', 
+    status: 'occupied', 
+    hostel: 'Block B',
+    students: [mockStudents[5]]
+  },
+  { 
+    id: '12', 
+    number: 'B-306', 
+    floor: 3, 
+    capacity: 4, 
+    occupied: 0, 
+    type: 'quad', 
+    status: 'available', 
+    hostel: 'Block B' 
+  },
+];
+
+// Complaints Mock Data
+export const mockComplaints: Complaint[] = [
+  {
+    id: '1',
+    studentId: '1',
+    studentName: 'Rahul Kumar',
+    title: 'AC not working',
+    description: 'The air conditioner in room A-204 has stopped working since yesterday. The room temperature is very high.',
+    category: 'maintenance',
+    status: 'open',
+    priority: 'high',
+    createdAt: '2024-01-15T10:30:00Z',
+    updatedAt: '2024-01-15T10:30:00Z',
+  },
+  {
+    id: '2',
+    studentId: '2',
+    studentName: 'Priya Sharma',
+    title: 'Poor food quality',
+    description: 'The food served in the mess yesterday was not fresh. Several students complained about stomach issues.',
+    category: 'food',
+    status: 'in-progress',
+    priority: 'urgent',
+    createdAt: '2024-01-14T14:20:00Z',
+    updatedAt: '2024-01-15T09:00:00Z',
+    assignedTo: 'Mess Warden',
+  },
+  {
+    id: '3',
+    studentId: '3',
+    studentName: 'Amit Patel',
+    title: 'Unclean washroom',
+    description: 'The common washroom on floor 3 needs immediate cleaning. There is no water supply since morning.',
+    category: 'cleanliness',
+    status: 'resolved',
+    priority: 'medium',
+    createdAt: '2024-01-13T08:15:00Z',
+    updatedAt: '2024-01-14T16:00:00Z',
+    assignedTo: 'Cleaning Staff',
+  },
+  {
+    id: '4',
+    studentId: '4',
+    studentName: 'Sneha Reddy',
+    title: 'Broken window',
+    description: 'Window in room B-204 is broken and needs repair urgently for security reasons.',
+    category: 'maintenance',
+    status: 'open',
+    priority: 'high',
+    createdAt: '2024-01-15T16:45:00Z',
+    updatedAt: '2024-01-15T16:45:00Z',
+  },
+  {
+    id: '5',
+    studentId: '5',
+    studentName: 'Arjun Singh',
+    title: 'Wi-Fi connectivity issues',
+    description: 'Internet connectivity in Block A is very poor. Unable to attend online classes.',
+    category: 'other',
+    status: 'in-progress',
+    priority: 'medium',
+    createdAt: '2024-01-14T11:30:00Z',
+    updatedAt: '2024-01-15T10:15:00Z',
+    assignedTo: 'IT Department',
+  },
+];
+
+// Leave Requests Mock Data
+export const mockLeaveRequests: LeaveRequest[] = [
+  {
+    id: '1',
+    studentId: '1',
+    studentName: 'Rahul Kumar',
+    startDate: '2024-01-20',
+    endDate: '2024-01-25',
+    reason: 'Family emergency - need to visit hometown for urgent family matter.',
+    status: 'pending',
+    createdAt: '2024-01-15T10:00:00Z',
+  },
+  {
+    id: '2',
+    studentId: '2',
+    studentName: 'Priya Sharma',
+    startDate: '2024-01-18',
+    endDate: '2024-01-20',
+    reason: 'Medical appointment with specialist in Mumbai.',
+    status: 'approved',
+    createdAt: '2024-01-12T14:30:00Z',
+    approvedBy: 'Warden Singh',
+    approvedAt: '2024-01-13T09:00:00Z',
+  },
+  {
+    id: '3',
+    studentId: '3',
+    studentName: 'Amit Patel',
+    startDate: '2024-01-22',
+    endDate: '2024-01-28',
+    reason: 'Planning a vacation trip with family.',
+    status: 'rejected',
+    createdAt: '2024-01-10T16:45:00Z',
+    approvedBy: 'Warden Singh',
+    approvedAt: '2024-01-11T11:00:00Z',
+  },
+  {
+    id: '4',
+    studentId: '4',
+    studentName: 'Sneha Reddy',
+    startDate: '2024-01-17',
+    endDate: '2024-01-19',
+    reason: 'Sister\'s wedding ceremony in Hyderabad.',
+    status: 'approved',
+    createdAt: '2024-01-10T09:20:00Z',
+    approvedBy: 'Warden Singh',
+    approvedAt: '2024-01-11T14:30:00Z',
+  },
+  {
+    id: '5',
+    studentId: '6',
+    studentName: 'Anjali Verma',
+    startDate: '2024-01-24',
+    endDate: '2024-01-26',
+    reason: 'Job interview in Delhi.',
+    status: 'pending',
+    createdAt: '2024-01-14T13:15:00Z',
+  },
+];
+
+// Dashboard Statistics
+export const getDashboardStats = (role: 'admin' | 'warden' | 'student') => {
+  if (role === 'student') {
+    return {
+      roomNumber: 'A-204',
+      pendingFees: '₹12,000',
+      activeComplaints: 2,
+      attendance: '92%',
+    };
+  }
+  
+  return {
+    totalStudents: mockStudents.length,
+    availableRooms: mockRooms.filter(r => r.status === 'available').length,
+    occupiedRooms: mockRooms.filter(r => r.status === 'occupied').length,
+    maintenanceRooms: mockRooms.filter(r => r.status === 'maintenance').length,
+    pendingFees: '₹2,45,000',
+    openComplaints: mockComplaints.filter(c => c.status === 'open').length,
+    pendingLeaves: mockLeaveRequests.filter(l => l.status === 'pending').length,
+  };
+};
+
+// Chart Data
+export const getOccupancyChartData = () => {
+  return [
+    { name: 'Jan', occupied: 65, available: 35 },
+    { name: 'Feb', occupied: 70, available: 30 },
+    { name: 'Mar', occupied: 75, available: 25 },
+    { name: 'Apr', occupied: 80, available: 20 },
+    { name: 'May', occupied: 85, available: 15 },
+    { name: 'Jun', occupied: 82, available: 18 },
+  ];
+};
+
+export const getComplaintsByCategoryData = () => {
+  return [
+    { name: 'Maintenance', value: mockComplaints.filter(c => c.category === 'maintenance').length },
+    { name: 'Food', value: mockComplaints.filter(c => c.category === 'food').length },
+    { name: 'Cleanliness', value: mockComplaints.filter(c => c.category === 'cleanliness').length },
+    { name: 'Security', value: mockComplaints.filter(c => c.category === 'security').length },
+    { name: 'Other', value: mockComplaints.filter(c => c.category === 'other').length },
+  ];
+};

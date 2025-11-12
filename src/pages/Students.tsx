@@ -1,65 +1,47 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter } from 'lucide-react';
-import { Student } from '@/types';
+import { Plus, Search, Filter, Download } from 'lucide-react';
+import { mockStudents } from '@/lib/mockData';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function Students() {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [courseFilter, setCourseFilter] = useState<string>('all');
+  const [yearFilter, setYearFilter] = useState<string>('all');
+  const [roomFilter, setRoomFilter] = useState<string>('all');
 
-  // Mock data
-  const students: Student[] = [
-    {
-      id: '1',
-      name: 'Rahul Kumar',
-      email: 'rahul.kumar@medhavi.edu',
-      phone: '+91 9876543210',
-      enrollmentNumber: 'MSU2024001',
-      course: 'B.Tech Computer Science',
-      year: 2,
-      roomNumber: 'A-204',
-      guardianName: 'Mr. Rajesh Kumar',
-      guardianPhone: '+91 9876543211',
-      address: 'Delhi, India',
-    },
-    {
-      id: '2',
-      name: 'Priya Sharma',
-      email: 'priya.sharma@medhavi.edu',
-      phone: '+91 9876543212',
-      enrollmentNumber: 'MSU2024002',
-      course: 'BBA',
-      year: 1,
-      roomNumber: 'B-105',
-      guardianName: 'Mr. Amit Sharma',
-      guardianPhone: '+91 9876543213',
-      address: 'Mumbai, India',
-    },
-    {
-      id: '3',
-      name: 'Amit Patel',
-      email: 'amit.patel@medhavi.edu',
-      phone: '+91 9876543214',
-      enrollmentNumber: 'MSU2024003',
-      course: 'B.Sc Physics',
-      year: 3,
-      roomNumber: 'A-305',
-      guardianName: 'Mr. Suresh Patel',
-      guardianPhone: '+91 9876543215',
-      address: 'Gujarat, India',
-    },
-  ];
+  const students = mockStudents;
 
-  const filteredStudents = students.filter(
-    (student) =>
+  // Get unique values for filters
+  const courses = Array.from(new Set(students.map(s => s.course)));
+  const years = Array.from(new Set(students.map(s => s.year)));
+  const hasRoom = students.filter(s => s.roomNumber);
+  const noRoom = students.filter(s => !s.roomNumber);
+
+  const filteredStudents = students.filter((student) => {
+    const matchesSearch =
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.enrollmentNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      student.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCourse = courseFilter === 'all' || student.course === courseFilter;
+    const matchesYear = yearFilter === 'all' || student.year.toString() === yearFilter;
+    const matchesRoom = roomFilter === 'all' || 
+      (roomFilter === 'assigned' && student.roomNumber) ||
+      (roomFilter === 'unassigned' && !student.roomNumber);
+    
+    return matchesSearch && matchesCourse && matchesYear && matchesRoom;
+  });
 
   return (
     <div className="space-y-6">
@@ -76,23 +58,96 @@ export default function Students() {
         </Button>
       </div>
 
+      {/* Summary Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Students</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{students.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">With Rooms</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-success">{hasRoom.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Without Rooms</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-warning">{noRoom.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Filtered Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{filteredStudents.length}</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <CardTitle>Student Directory</CardTitle>
-            <div className="flex gap-2">
-              <div className="relative flex-1 md:w-64">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <CardTitle>Student Directory</CardTitle>
+              <Button variant="outline" size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+            </div>
+            
+            {/* Search and Filters */}
+            <div className="flex flex-col gap-2 md:flex-row">
+              <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search students..."
+                  placeholder="Search by name, enrollment, or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
+              <Select value={courseFilter} onValueChange={setCourseFilter}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="All Courses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Courses</SelectItem>
+                  {courses.map(course => (
+                    <SelectItem key={course} value={course}>{course}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={yearFilter} onValueChange={setYearFilter}>
+                <SelectTrigger className="w-full md:w-36">
+                  <SelectValue placeholder="All Years" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {years.map(year => (
+                    <SelectItem key={year} value={year.toString()}>Year {year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={roomFilter} onValueChange={setRoomFilter}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Room Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Students</SelectItem>
+                  <SelectItem value="assigned">With Room</SelectItem>
+                  <SelectItem value="unassigned">Without Room</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -133,7 +188,11 @@ export default function Students() {
                       </div>
                     </td>
                     <td className="py-4">
-                      <Badge variant="outline">{student.roomNumber}</Badge>
+                      {student.roomNumber ? (
+                        <Badge variant="outline">{student.roomNumber}</Badge>
+                      ) : (
+                        <Badge variant="secondary">Not Assigned</Badge>
+                      )}
                     </td>
                     <td className="py-4">
                       <span className="text-sm text-muted-foreground">{student.phone}</span>

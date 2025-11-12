@@ -1,22 +1,30 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Users } from 'lucide-react';
+import { Plus, Users, Building, Filter } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { mockRooms } from '@/lib/mockData';
 import { Room } from '@/types';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function Rooms() {
   const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [hostelFilter, setHostelFilter] = useState<string>('all');
+  const [floorFilter, setFloorFilter] = useState<string>('all');
   
-  // Mock data
-  const rooms: Room[] = [
-    { id: '1', number: 'A-101', floor: 1, capacity: 2, occupied: 2, type: 'double', status: 'occupied', hostel: 'Block A' },
-    { id: '2', number: 'A-102', floor: 1, capacity: 2, occupied: 1, type: 'double', status: 'occupied', hostel: 'Block A' },
-    { id: '3', number: 'A-103', floor: 1, capacity: 2, occupied: 0, type: 'double', status: 'available', hostel: 'Block A' },
-    { id: '4', number: 'A-104', floor: 1, capacity: 2, occupied: 0, type: 'double', status: 'maintenance', hostel: 'Block A' },
-    { id: '5', number: 'B-201', floor: 2, capacity: 3, occupied: 3, type: 'triple', status: 'occupied', hostel: 'Block B' },
-    { id: '6', number: 'B-202', floor: 2, capacity: 3, occupied: 2, type: 'triple', status: 'occupied', hostel: 'Block B' },
-  ];
+  const rooms = mockRooms;
+  
+  // Get unique values for filters
+  const hostels = Array.from(new Set(rooms.map(r => r.hostel)));
+  const floors = Array.from(new Set(rooms.map(r => r.floor)));
 
   const getStatusColor = (status: Room['status']) => {
     switch (status) {
@@ -33,11 +41,22 @@ export default function Rooms() {
     }
   };
 
+  const filteredRooms = rooms.filter((room) => {
+    const matchesStatus = statusFilter === 'all' || room.status === statusFilter;
+    const matchesHostel = hostelFilter === 'all' || room.hostel === hostelFilter;
+    const matchesFloor = floorFilter === 'all' || room.floor.toString() === floorFilter;
+    
+    return matchesStatus && matchesHostel && matchesFloor;
+  });
+
   const summary = {
     total: rooms.length,
     available: rooms.filter((r) => r.status === 'available').length,
     occupied: rooms.filter((r) => r.status === 'occupied').length,
     maintenance: rooms.filter((r) => r.status === 'maintenance').length,
+    reserved: rooms.filter((r) => r.status === 'reserved').length,
+    totalCapacity: rooms.reduce((acc, r) => acc + r.capacity, 0),
+    totalOccupied: rooms.reduce((acc, r) => acc + r.occupied, 0),
   };
 
   return (
@@ -54,7 +73,7 @@ export default function Rooms() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Rooms</CardTitle>
@@ -87,11 +106,77 @@ export default function Rooms() {
             <p className="text-2xl font-bold text-warning">{summary.maintenance}</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Capacity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{summary.totalCapacity}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Occupancy Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-info">
+              {Math.round((summary.totalOccupied / summary.totalCapacity) * 100)}%
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Building className="h-5 w-5" />
+              Room Directory
+            </CardTitle>
+            <div className="flex gap-2">
+              <Select value={hostelFilter} onValueChange={setHostelFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Hostels" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Hostels</SelectItem>
+                  {hostels.map(hostel => (
+                    <SelectItem key={hostel} value={hostel}>{hostel}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={floorFilter} onValueChange={setFloorFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="All Floors" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Floors</SelectItem>
+                  {floors.map(floor => (
+                    <SelectItem key={floor} value={floor.toString()}>Floor {floor}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="occupied">Occupied</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="reserved">Reserved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
       {/* Rooms Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {rooms.map((room) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {filteredRooms.map((room) => (
           <Card key={room.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -117,8 +202,8 @@ export default function Rooms() {
                   {room.occupied}/{room.capacity}
                 </span>
               </div>
-              <Button variant="outline" className="w-full mt-2">
-                View Details
+              <Button variant="outline" className="w-full mt-2" asChild>
+                <Link to={`/rooms/${room.id}`}>View Details</Link>
               </Button>
             </CardContent>
           </Card>

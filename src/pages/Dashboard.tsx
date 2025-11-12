@@ -1,8 +1,10 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, DoorOpen, CreditCard, MessageSquare, TrendingUp, AlertCircle } from 'lucide-react';
+import { Users, DoorOpen, CreditCard, MessageSquare, TrendingUp, AlertCircle, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LucideIcon } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getDashboardStats, getOccupancyChartData, getComplaintsByCategoryData, mockComplaints, mockLeaveRequests } from '@/lib/mockData';
 
 type StatWithTrend = {
   title: string;
@@ -23,29 +25,30 @@ type Stat = StatWithTrend | StatWithoutTrend;
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const stats = getDashboardStats(user?.role || 'student');
+  const occupancyData = getOccupancyChartData();
+  const complaintsData = getComplaintsByCategoryData();
 
   const adminStats: StatWithTrend[] = [
-    { title: 'Total Students', value: '1,234', icon: Users, trend: '+12%', color: 'text-primary' },
-    { title: 'Available Rooms', value: '45', icon: DoorOpen, trend: '-8%', color: 'text-secondary' },
-    { title: 'Pending Fees', value: '₹2.4L', icon: CreditCard, trend: '-15%', color: 'text-accent' },
-    { title: 'Open Complaints', value: '23', icon: MessageSquare, trend: '+5%', color: 'text-destructive' },
+    { title: 'Total Students', value: stats.totalStudents?.toString() || '0', icon: Users, trend: '+12%', color: 'text-primary' },
+    { title: 'Available Rooms', value: stats.availableRooms?.toString() || '0', icon: DoorOpen, trend: '-8%', color: 'text-secondary' },
+    { title: 'Pending Fees', value: stats.pendingFees || '₹0', icon: CreditCard, trend: '-15%', color: 'text-accent' },
+    { title: 'Open Complaints', value: stats.openComplaints?.toString() || '0', icon: MessageSquare, trend: '+5%', color: 'text-destructive' },
   ];
 
   const studentStats: StatWithoutTrend[] = [
-    { title: 'Room Number', value: 'A-204', icon: DoorOpen, color: 'text-primary' },
-    { title: 'Pending Fees', value: '₹12,000', icon: CreditCard, color: 'text-accent' },
-    { title: 'Active Complaints', value: '2', icon: MessageSquare, color: 'text-destructive' },
-    { title: 'Attendance', value: '92%', icon: TrendingUp, color: 'text-success' },
+    { title: 'Room Number', value: stats.roomNumber || 'N/A', icon: DoorOpen, color: 'text-primary' },
+    { title: 'Pending Fees', value: stats.pendingFees || '₹0', icon: CreditCard, color: 'text-accent' },
+    { title: 'Active Complaints', value: stats.activeComplaints?.toString() || '0', icon: MessageSquare, color: 'text-destructive' },
+    { title: 'Attendance', value: stats.attendance || '0%', icon: TrendingUp, color: 'text-success' },
   ];
 
-  const recentActivities = [
-    { id: 1, action: 'New complaint filed', user: 'Rahul Kumar', time: '5 minutes ago', type: 'complaint' },
-    { id: 2, action: 'Fee payment received', user: 'Priya Sharma', time: '1 hour ago', type: 'payment' },
-    { id: 3, action: 'Leave request approved', user: 'Amit Patel', time: '2 hours ago', type: 'leave' },
-    { id: 4, action: 'Room maintenance completed', user: 'Room B-305', time: '3 hours ago', type: 'maintenance' },
-  ];
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--warning))', 'hsl(var(--info))'];
 
-  const stats: Stat[] = user?.role === 'student' ? studentStats : adminStats;
+  const recentComplaints = mockComplaints.slice(0, 3);
+  const recentLeaves = mockLeaveRequests.slice(0, 3);
+
+  const cardStats: Stat[] = user?.role === 'student' ? studentStats : adminStats;
 
   return (
     <div className="space-y-6">
@@ -60,7 +63,7 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {cardStats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -83,37 +86,147 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Recent Activities */}
+      {/* Charts Section - Admin/Warden Only */}
       {user?.role !== 'student' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                      {activity.type === 'complaint' && <MessageSquare className="h-5 w-5 text-primary" />}
-                      {activity.type === 'payment' && <CreditCard className="h-5 w-5 text-success" />}
-                      {activity.type === 'leave' && <AlertCircle className="h-5 w-5 text-warning" />}
-                      {activity.type === 'maintenance' && <DoorOpen className="h-5 w-5 text-info" />}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Occupancy Trend */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Room Occupancy Trend</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={occupancyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }} 
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="occupied" stroke="hsl(var(--primary))" strokeWidth={2} name="Occupied" />
+                  <Line type="monotone" dataKey="available" stroke="hsl(var(--success))" strokeWidth={2} name="Available" />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Complaints by Category */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Complaints by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={complaintsData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={100}
+                    fill="hsl(var(--primary))"
+                    dataKey="value"
+                  >
+                    {complaintsData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }} 
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Recent Complaints & Leaves */}
+      {user?.role !== 'student' && (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Recent Complaints
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentComplaints.map((complaint) => (
+                  <div
+                    key={complaint.id}
+                    className="flex items-start justify-between border-b border-border pb-4 last:border-0 last:pb-0"
+                  >
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">{complaint.title}</p>
+                      <p className="text-xs text-muted-foreground">{complaint.studentName}</p>
+                      <Badge variant="outline" className="text-xs">
+                        {complaint.category}
+                      </Badge>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{activity.action}</p>
-                      <p className="text-xs text-muted-foreground">{activity.user}</p>
-                    </div>
+                    <Badge 
+                      className={
+                        complaint.status === 'open' 
+                          ? 'bg-destructive text-destructive-foreground'
+                          : complaint.status === 'in-progress'
+                          ? 'bg-warning text-warning-foreground'
+                          : 'bg-success text-success-foreground'
+                      }
+                    >
+                      {complaint.status}
+                    </Badge>
                   </div>
-                  <span className="text-xs text-muted-foreground">{activity.time}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Pending Leave Requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentLeaves.filter(l => l.status === 'pending').map((leave) => (
+                  <div
+                    key={leave.id}
+                    className="flex items-start justify-between border-b border-border pb-4 last:border-0 last:pb-0"
+                  >
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">{leave.studentName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{leave.reason}</p>
+                    </div>
+                    <Badge className="bg-warning text-warning-foreground">
+                      {leave.status}
+                    </Badge>
+                  </div>
+                ))}
+                {recentLeaves.filter(l => l.status === 'pending').length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No pending leave requests
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Quick Actions for Students */}

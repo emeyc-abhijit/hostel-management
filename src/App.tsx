@@ -10,8 +10,10 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import StudentForm from "./pages/StudentForm";
+import StudentDetail from "./pages/StudentDetail";
 import Rooms from "./pages/Rooms";
 import RoomForm from "./pages/RoomForm";
+import RoomDetail from "./pages/RoomDetail";
 import Complaints from "./pages/Complaints";
 import ComplaintForm from "./pages/ComplaintForm";
 import Leaves from "./pages/Leaves";
@@ -63,6 +65,16 @@ const App = () => (
               }
             />
             <Route
+              path="/students/:id"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'warden']}>
+                  <DashboardLayout>
+                    <StudentDetail />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/rooms"
               element={
                 <ProtectedRoute allowedRoles={['admin', 'warden']}>
@@ -78,6 +90,16 @@ const App = () => (
                 <ProtectedRoute allowedRoles={['admin', 'warden']}>
                   <DashboardLayout>
                     <RoomForm />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rooms/:id"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'warden']}>
+                  <DashboardLayout>
+                    <RoomDetail />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
