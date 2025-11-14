@@ -9,6 +9,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import HostelLanding from "./pages/HostelLanding";
 import Students from "./pages/Students";
 import StudentForm from "./pages/StudentForm";
 import StudentDetail from "./pages/StudentDetail";
@@ -46,6 +47,16 @@ const App = () => (
             <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/login" element={<Login />} />
+            
+            {/* Hostel Landing - Admin first-time setup */}
+            <Route
+              path="/hostel-setup"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <HostelLanding />
+                </ProtectedRoute>
+              }
+            />
             
             {/* Hostel Management - Admin Only */}
             <Route

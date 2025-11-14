@@ -7,7 +7,7 @@ import { LucideIcon } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getDashboardStats, getOccupancyChartData, getComplaintsByCategoryData, mockComplaints, mockLeaveRequests } from '@/lib/mockData';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import hostelService from '@/lib/hostelService';
 import { Hostel } from '@/types';
 
@@ -78,16 +78,21 @@ export default function Dashboard() {
 
   const cardStats: Stat[] = user?.role === 'student' ? studentStats : adminStats;
 
-  // Show hostel setup for admin if no hostels exist
+  // Redirect admin to hostel setup if no hostels exist
   if (user?.role === 'admin' && hostels.length === 0) {
+    return <Navigate to="/hostel-setup" replace />;
+  }
+
+  // Show hostel context message if admin hasn't selected a hostel
+  if (user?.role === 'admin' && !selectedHostel) {
     return (
       <div className="space-y-6">
         <Card className="glass-card border-primary/20">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Building2 className="w-20 h-20 text-primary mb-6 animate-pulse" />
-            <h2 className="text-2xl font-bold mb-3">Welcome to Medhavi HMS</h2>
+            <h2 className="text-2xl font-bold mb-3">Select a Hostel</h2>
             <p className="text-muted-foreground mb-2 text-center max-w-md">
-              To get started, create your first hostel. Once created, you'll be able to manage rooms, students, and all other features for each hostel.
+              Please select a hostel from the sidebar to view its dashboard and manage its features.
             </p>
             <p className="text-sm text-muted-foreground mb-8 text-center max-w-md">
               All features like student management, room allocation, complaints, and more will be organized under each hostel.
