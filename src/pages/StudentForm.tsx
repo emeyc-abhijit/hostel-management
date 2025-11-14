@@ -8,11 +8,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import studentService from '@/lib/studentService';
+import { useEffect } from 'react';
+import { Student } from '@/types';
 
 export default function StudentForm() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { id } = useParams();
   
   const form = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
@@ -29,13 +33,47 @@ export default function StudentForm() {
     },
   });
 
-  const onSubmit = (data: StudentFormData) => {
-    console.log('Student data:', data);
-    toast({
-      title: 'Student added successfully',
-      description: `${data.name} has been registered.`,
-    });
-    navigate('/students');
+  // if editing, load student
+  useEffect(() => {
+    let mounted = true;
+    if (!id) return;
+    (async () => {
+      const s = await studentService.getStudentById(id);
+      if (!mounted || !s) return;
+      form.reset({
+        name: s.name,
+        email: s.email,
+        phone: s.phone,
+        enrollmentNumber: s.enrollmentNumber,
+        course: s.course,
+        year: s.year,
+        guardianName: s.guardianName,
+        guardianPhone: s.guardianPhone,
+        address: s.address,
+      });
+    })();
+    return () => { mounted = false; };
+  }, [id, form]);
+
+  const onSubmit = async (data: StudentFormData) => {
+    if (id) {
+  const updated = await studentService.updateStudent(id, data as unknown as Partial<Student>);
+      if (updated) {
+        toast({ title: 'Student updated', description: `${updated.name} updated successfully.` });
+        navigate('/students');
+        return;
+      }
+      toast({ title: 'Error', description: 'Could not update student.' });
+      return;
+    }
+
+  const created = await studentService.createStudent(data as unknown as Partial<Student>);
+    if (created) {
+      toast({ title: 'Student added successfully', description: `${created.name} has been registered.` });
+      navigate('/students');
+      return;
+    }
+    toast({ title: 'Error', description: 'Could not add student.' });
   };
 
   return (

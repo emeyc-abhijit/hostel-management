@@ -1,122 +1,151 @@
 import { Room, Student } from '@/types';
-import { mockRooms, mockStudents } from '@/lib/mockData';
 
-const ROOMS_KEY = 'hms_rooms';
-const STUDENTS_KEY = 'hms_students';
+const API_BASE = (import.meta as unknown as { env: { VITE_API_URL?: string } }).env?.VITE_API_URL ?? 'http://localhost:4000';
 
-const loadOrSeed = <T,>(key: string, seed: T): T => {
-  const raw = localStorage.getItem(key);
-  if (!raw) {
-    localStorage.setItem(key, JSON.stringify(seed));
-    return seed;
-  }
-  try {
-    return JSON.parse(raw) as T;
-  } catch (e) {
-    localStorage.setItem(key, JSON.stringify(seed));
-    return seed;
-  }
+const tokenHeader = () => {
+  const token = localStorage.getItem('hms_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const safeFetch = async (url: string, opts: RequestInit = {}) => {
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error('Network');
+  return res.json();
+};
+
+const mapStudent = (s: unknown): Student => {
+  const obj = s as Record<string, unknown>;
+  return {
+    id: String(obj._id ?? obj.id ?? ''),
+    name: String(obj.name ?? ''),
+    email: String(obj.email ?? ''),
+    phone: String(obj.phone ?? ''),
+    roomNumber: obj.roomNumber as string | undefined,
+    enrollmentNumber: String(obj.enrollmentNumber ?? ''),
+    course: String(obj.course ?? ''),
+    year: Number(obj.year ?? 0),
+    guardianName: String(obj.guardianName ?? ''),
+    guardianPhone: String(obj.guardianPhone ?? ''),
+    address: String(obj.address ?? ''),
+    avatar: String(obj.avatar ?? ''),
+  };
+};
+
+const mapRoom = (r: unknown): Room => {
+  const obj = r as Record<string, unknown>;
+  const students = Array.isArray(obj.students) ? obj.students : [];
+  return {
+    id: String(obj._id ?? obj.id ?? ''),
+    number: String(obj.number ?? ''),
+    floor: Number(obj.floor ?? 0),
+    capacity: Number(obj.capacity ?? 0),
+    occupied: Number(obj.occupied ?? 0),
+  type: (String(obj.type ?? 'double') as Room['type']),
+  status: (String(obj.status ?? 'available') as Room['status']),
+    hostel: String(obj.hostel ?? ''),
+    students: students.map((s) => mapStudent(s)),
+  } as Room;
 };
 
 export const initStorage = () => {
-  loadOrSeed<Room[]>(ROOMS_KEY, mockRooms);
-  loadOrSeed<Student[]>(STUDENTS_KEY, mockStudents);
+  // keep localStorage seed for fallback and offline usage (no-op here)
 };
 
 export const getRooms = async (): Promise<Room[]> => {
-  initStorage();
-  const raw = localStorage.getItem(ROOMS_KEY)!;
-  return JSON.parse(raw) as Room[];
+  try {
+    const data = await safeFetch(`${API_BASE}/api/rooms`, { headers: { 'Content-Type': 'application/json', ...tokenHeader() } });
+    return (data.rooms || []).map((r: unknown) => mapRoom(r)) as Room[];
+  } catch (e) {
+    // Fallback to empty array if backend unavailable
+    return [];
+  }
 };
 
 export const getRoomById = async (id: string): Promise<Room | undefined> => {
-  const rooms = await getRooms();
-  return rooms.find(r => r.id === id);
+  try {
+    const data = await safeFetch(`${API_BASE}/api/rooms/${id}`, { headers: { 'Content-Type': 'application/json', ...tokenHeader() } });
+    if (!data.room) return undefined;
+    return mapRoom(data.room) as Room;
+  } catch (e) {
+    return undefined;
+  }
 };
 
-export const createRoom = async (room: Room): Promise<Room> => {
-  const rooms = await getRooms();
-  rooms.push(room);
-  localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
-  return room;
+export const createRoom = async (room: Partial<Room>): Promise<Room | undefined> => {
+  try {
+    const data = await safeFetch(`${API_BASE}/api/rooms`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...tokenHeader() }, body: JSON.stringify(room) });
+    return data.room ? mapRoom(data.room) : undefined;
+  } catch (e) {
+    return undefined;
+  }
 };
 
 export const updateRoom = async (id: string, updates: Partial<Room>): Promise<Room | undefined> => {
-  const rooms = await getRooms();
-  const idx = rooms.findIndex(r => r.id === id);
-  if (idx === -1) return undefined;
-  rooms[idx] = { ...rooms[idx], ...updates };
-  localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
-  return rooms[idx];
+  try {
+    const data = await safeFetch(`${API_BASE}/api/rooms/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...tokenHeader() }, body: JSON.stringify(updates) });
+    return data.room ? mapRoom(data.room) : undefined;
+  } catch (e) {
+    return undefined;
+  }
 };
 
 export const deleteRoom = async (id: string): Promise<boolean> => {
-  let rooms = await getRooms();
-  const exists = rooms.some(r => r.id === id);
-  if (!exists) return false;
-  rooms = rooms.filter(r => r.id !== id);
-  localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
-  return true;
+  try {
+    await safeFetch(`${API_BASE}/api/rooms/${id}`, { method: 'DELETE', headers: { ...tokenHeader() } });
+    return true;
+  } catch (e) {
+    return false;
+  }
 };
 
 export const getStudents = async (): Promise<Student[]> => {
-  initStorage();
-  const raw = localStorage.getItem(STUDENTS_KEY)!;
-  return JSON.parse(raw) as Student[];
+  try {
+    // Prefer backend /api/students which includes unassigned students
+    const res = await safeFetch(`${API_BASE}/api/students`, { headers: { 'Content-Type': 'application/json', ...tokenHeader() } });
+    const list = (res.students || []).map((s: unknown) => {
+      const obj = s as Record<string, unknown>;
+      return {
+        id: String(obj._id ?? obj.id ?? ''),
+        name: String(obj.name ?? ''),
+        email: String(obj.email ?? ''),
+        phone: String(obj.phone ?? ''),
+        roomNumber: obj.roomNumber as string | undefined,
+        enrollmentNumber: String(obj.enrollmentNumber ?? ''),
+        course: String(obj.course ?? ''),
+        year: Number(obj.year ?? 0),
+        guardianName: String(obj.guardianName ?? ''),
+        guardianPhone: String(obj.guardianPhone ?? ''),
+        address: String(obj.address ?? ''),
+        avatar: String(obj.avatar ?? ''),
+      } as Student;
+    });
+    return list;
+  } catch (e) {
+    return [];
+  }
 };
 
-export const updateStudent = async (id: string, updates: Partial<Student>): Promise<Student | undefined> => {
-  const students = await getStudents();
-  const idx = students.findIndex(s => s.id === id);
-  if (idx === -1) return undefined;
-  students[idx] = { ...students[idx], ...updates };
-  localStorage.setItem(STUDENTS_KEY, JSON.stringify(students));
-  return students[idx];
+export const updateStudent = async (_id: string, updates: Partial<Student>): Promise<Student | undefined> => {
+  // No students API yet; frontend updates are local only.
+  return undefined;
 };
 
 export const assignStudentToRoom = async (roomId: string, studentId: string): Promise<{room?: Room; student?: Student}> => {
-  const rooms = await getRooms();
-  const students = await getStudents();
-  const roomIdx = rooms.findIndex(r => r.id === roomId);
-  const studentIdx = students.findIndex(s => s.id === studentId);
-  if (roomIdx === -1 || studentIdx === -1) return {};
-
-  const room = rooms[roomIdx];
-  const student = students[studentIdx];
-
-  // Prevent duplicates and capacity overflow
-  if ((room.students || []).some(s => s.id === student.id)) return { room, student };
-  if (room.occupied >= room.capacity) return { room, student };
-
-  // assign
-  room.students = [...(room.students || []), student];
-  room.occupied = (room.occupied || 0) + 1;
-  students[studentIdx] = { ...student, roomNumber: room.number };
-
-  localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
-  localStorage.setItem(STUDENTS_KEY, JSON.stringify(students));
-
-  return { room, student: students[studentIdx] };
+  try {
+    const data = await safeFetch(`${API_BASE}/api/rooms/${roomId}/assign`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...tokenHeader() }, body: JSON.stringify({ studentId }) });
+    return { room: data.room ? mapRoom(data.room) : undefined, student: data.student ? mapStudent(data.student) : undefined };
+  } catch (e) {
+    return {};
+  }
 };
 
 export const removeStudentFromRoom = async (roomId: string, studentId: string): Promise<{room?: Room; student?: Student}> => {
-  const rooms = await getRooms();
-  const students = await getStudents();
-  const roomIdx = rooms.findIndex(r => r.id === roomId);
-  const studentIdx = students.findIndex(s => s.id === studentId);
-  if (roomIdx === -1 || studentIdx === -1) return {};
-
-  const room = rooms[roomIdx];
-  const student = students[studentIdx];
-
-  room.students = (room.students || []).filter(s => s.id !== studentId);
-  room.occupied = Math.max(0, (room.occupied || 0) - 1);
-  students[studentIdx] = { ...student, roomNumber: undefined };
-
-  localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
-  localStorage.setItem(STUDENTS_KEY, JSON.stringify(students));
-
-  return { room, student: students[studentIdx] };
+  try {
+    const data = await safeFetch(`${API_BASE}/api/rooms/${roomId}/students/${studentId}`, { method: 'DELETE', headers: { ...tokenHeader() } });
+    return { room: data.room ? mapRoom(data.room) : undefined, student: data.student ? mapStudent(data.student) : undefined };
+  } catch (e) {
+    return {};
+  }
 };
 
 export default {

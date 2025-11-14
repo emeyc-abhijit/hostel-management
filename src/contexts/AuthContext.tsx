@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 
@@ -19,44 +20,81 @@ export const useAuth = () => {
   return context;
 };
 
+// Default to localhost backend port 4000 when VITE_API_URL isn't set (dev convenience).
+const API_BASE = (import.meta as unknown as { env: { VITE_API_URL?: string } }).env?.VITE_API_URL ?? 'http://localhost:4000';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Restore session: prefer token-based session with backend /me endpoint
   useEffect(() => {
-    // Check for existing session
-    const storedUser = localStorage.getItem('hms_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    const init = async () => {
+      const token = localStorage.getItem('hms_token');
+      const storedUser = localStorage.getItem('hms_user');
+      if (token) {
+        try {
+          const res = await fetch(`${API_BASE}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error('Session invalid');
+          const data = await res.json();
+          // backend returns { user }
+          const backendUser = data.user as User;
+          setUser(backendUser);
+          localStorage.setItem('hms_user', JSON.stringify(backendUser));
+          setIsLoading(false);
+          return;
+        } catch (err) {
+          // clear invalid session
+          localStorage.removeItem('hms_token');
+          localStorage.removeItem('hms_user');
+        }
+      }
+
+      // fallback: check stored user (for dev/mocked sessions)
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (_) {
+          localStorage.removeItem('hms_user');
+        }
+      }
+      setIsLoading(false);
+    };
+
+    init();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock login - replace with actual API call
     setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock user data based on email
-    let mockUser: User;
-    if (email.includes('admin')) {
-      mockUser = { id: '1', name: 'Admin User', email, role: 'admin' };
-    } else if (email.includes('warden')) {
-      mockUser = { id: '2', name: 'Warden User', email, role: 'warden' };
-    } else {
-      mockUser = { id: '3', name: 'Student User', email, role: 'student' };
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Login failed' }));
+        throw new Error(err.message || 'Login failed');
+      }
+
+      const data = await res.json();
+      const token = data.token as string;
+      const loggedUser = data.user as User;
+      if (token) localStorage.setItem('hms_token', token);
+      if (loggedUser) localStorage.setItem('hms_user', JSON.stringify(loggedUser));
+      setUser(loggedUser);
+    } finally {
+      setIsLoading(false);
     }
-    
-    setUser(mockUser);
-    localStorage.setItem('hms_user', JSON.stringify(mockUser));
-    setIsLoading(false);
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('hms_user');
+    localStorage.removeItem('hms_token');
   };
 
   return (

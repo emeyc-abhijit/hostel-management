@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Mail, Phone, User, BookOpen, Home, Users, Edit, Trash2 } from 'lucide-react';
-import { mockStudents } from '@/lib/mockData';
+import { useEffect, useState } from 'react';
+import studentService from '@/lib/studentService';
+import { Student } from '@/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +23,18 @@ export default function StudentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const student = mockStudents.find(s => s.id === id);
+  const [student, setStudent] = useState<Student | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!id) return;
+    (async () => {
+      const s = await studentService.getStudentById(id);
+      if (!mounted) return;
+      if (s) setStudent(s);
+    })();
+    return () => { mounted = false; };
+  }, [id]);
 
   if (!student) {
     return (
@@ -34,11 +46,16 @@ export default function StudentDetail() {
   }
 
   const handleDelete = () => {
-    toast({
-      title: 'Student deleted',
-      description: `${student.name} has been removed from the system.`,
-    });
-    navigate('/students');
+    (async () => {
+      if (!student) return;
+      const ok = await studentService.deleteStudent(student.id);
+      if (ok) {
+        toast({ title: 'Student deleted', description: `${student.name} has been removed from the system.` });
+        navigate('/students');
+      } else {
+        toast({ title: 'Error', description: 'Could not delete student.' });
+      }
+    })();
   };
 
   return (
@@ -53,8 +70,8 @@ export default function StudentDetail() {
             <p className="text-muted-foreground">View and manage student details</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
+          <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate(`/students/${id}/edit`)}>
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </Button>

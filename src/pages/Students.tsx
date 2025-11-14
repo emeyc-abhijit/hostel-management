@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Filter, Download } from 'lucide-react';
-import { mockStudents } from '@/lib/mockData';
+import studentService from '@/lib/studentService';
+import { Student } from '@/types';
 import {
   Select,
   SelectContent,
@@ -20,7 +21,18 @@ export default function Students() {
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [roomFilter, setRoomFilter] = useState<string>('all');
 
-  const students = mockStudents;
+  const [students, setStudents] = useState<Student[]>([]);
+
+  // load students from backend
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const list = await studentService.getStudents();
+      if (!mounted) return;
+      setStudents(list);
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   // Get unique values for filters
   const courses = Array.from(new Set(students.map(s => s.course)));

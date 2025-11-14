@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import roomService from '@/lib/roomService';
 import { Room } from '@/types';
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -22,15 +23,21 @@ export default function Rooms() {
   
   const [rooms, setRooms] = useState<Room[]>([]);
 
-  // load rooms from service
+  // load rooms from service (callable so we can refresh)
+  const location = useLocation();
+  const loadRooms = async () => {
+    const data = await roomService.getRooms();
+    setRooms(data);
+  };
+
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const data = await roomService.getRooms();
-      if (mounted) setRooms(data);
+      if (!mounted) return;
+      await loadRooms();
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [location.pathname]);
   
   // Get unique values for filters
   const hostels = Array.from(new Set(rooms.map(r => r.hostel)));
@@ -65,8 +72,9 @@ export default function Rooms() {
     occupied: rooms.filter((r) => r.status === 'occupied').length,
     maintenance: rooms.filter((r) => r.status === 'maintenance').length,
     reserved: rooms.filter((r) => r.status === 'reserved').length,
-    totalCapacity: rooms.reduce((acc, r) => acc + r.capacity, 0),
-    totalOccupied: rooms.reduce((acc, r) => acc + r.occupied, 0),
+    totalCapacity: rooms.reduce((acc, r) => acc + (Number.isFinite(r.capacity) ? r.capacity : Number(r.capacity ?? 0)), 0),
+    totalOccupied: rooms.reduce((acc, r) => acc + (Number.isFinite(r.occupied) ? r.occupied : Number(r.occupied ?? 0)), 0),
+    totalAvailableBeds: rooms.reduce((acc, r) => acc + Math.max(0, (Number(r.capacity ?? 0) - Number(r.occupied ?? 0))), 0),
   };
 
   return (
@@ -83,13 +91,32 @@ export default function Rooms() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-6">
+  <div className="grid gap-4 md:grid-cols-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Rooms</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{summary.total}</p>
+          </CardContent>
+        </Card>
+        {/* Refresh control (only refresh here; Add Room button kept in header) */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Controls</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Button onClick={loadRooms} variant="outline">Refresh</Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Beds Available</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-success">{summary.totalAvailableBeds}</p>
           </CardContent>
         </Card>
         <Card>
@@ -130,7 +157,7 @@ export default function Rooms() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-info">
-              {Math.round((summary.totalOccupied / summary.totalCapacity) * 100)}%
+              {summary.totalCapacity > 0 ? `${Math.round((summary.totalOccupied / summary.totalCapacity) * 100)}%` : '0%'}
             </p>
           </CardContent>
         </Card>
@@ -211,6 +238,10 @@ export default function Rooms() {
                   <Users className="h-4 w-4" />
                   {room.occupied}/{room.capacity}
                 </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Available</span>
+                <span className="font-medium text-success">{Math.max(0, room.capacity - room.occupied)} slots</span>
               </div>
               <Button variant="outline" className="w-full mt-2" asChild>
                 <Link to={`/rooms/${room.id}`}>View Details</Link>

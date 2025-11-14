@@ -75,6 +75,16 @@ const App = () => (
               }
             />
             <Route
+              path="/students/:id/edit"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'warden']}>
+                  <DashboardLayout>
+                    <StudentForm />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/students/:id"
               element={
                 <ProtectedRoute allowedRoles={['admin', 'warden']}>

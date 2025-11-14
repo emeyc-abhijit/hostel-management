@@ -46,13 +46,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { name: 'Leaves', href: '/leaves', icon: Calendar, roles: ['admin', 'warden', 'student'] },
     { name: 'Staff', href: '/staff', icon: UserCog, roles: ['admin'] },
     { name: 'Notifications', href: '/notifications', icon: Bell, roles: ['admin', 'warden'] },
-    
+
     // Student-specific routes
     { name: 'My Room', href: '/my-room', icon: DoorOpen, roles: ['student'] },
     { name: 'My Fees', href: '/my-fees', icon: CreditCard, roles: ['student'] },
     { name: 'My Complaints', href: '/my-complaints', icon: MessageSquare, roles: ['student'] },
     { name: 'My Leaves', href: '/my-leaves', icon: Calendar, roles: ['student'] },
-    
+
   ];
 
   const filteredNavigation = navigation.filter(
@@ -64,11 +64,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Sidebar for desktop */}
       <aside className="hidden w-64 flex-col border-r border-border bg-sidebar lg:flex">
         <div className="flex h-16 items-center border-b border-sidebar-border px-6">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            Medhavi HMS
-          </h1>
+          <img
+            src="../../../MSU-logo.svg" // replace this with your logo path
+            alt="Medhavi Hostel Logo"
+            className="h-10 w-auto object-contain"
+          />
         </div>
-        
+
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
           {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.href;
@@ -90,7 +92,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           })}
         </nav>
 
-          <div className="border-t border-sidebar-border p-4">
+        <div className="border-t border-sidebar-border p-4">
           <Link to="/profile" className="block">
             <div className="flex items-center gap-3 px-3 py-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-glow text-white font-semibold shadow-lg">
@@ -138,7 +140,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <X className="h-5 w-5" />
             </Button>
           </div>
-          
+
           <nav className="flex-1 space-y-1 overflow-y-auto p-4">
             {filteredNavigation.map((item) => {
               const isActive = location.pathname === item.href;
@@ -196,7 +198,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          
+
           <div className="hidden lg:flex flex-1 max-w-md mx-6">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
