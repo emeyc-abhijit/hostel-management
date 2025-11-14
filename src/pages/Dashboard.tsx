@@ -1,10 +1,15 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, DoorOpen, CreditCard, MessageSquare, TrendingUp, AlertCircle, Calendar } from 'lucide-react';
+import { Users, DoorOpen, CreditCard, MessageSquare, TrendingUp, AlertCircle, Calendar, Building2, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { LucideIcon } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getDashboardStats, getOccupancyChartData, getComplaintsByCategoryData, mockComplaints, mockLeaveRequests } from '@/lib/mockData';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import hostelService from '@/lib/hostelService';
+import { Hostel } from '@/types';
 
 type StatWithTrend = {
   title: string;
@@ -25,6 +30,29 @@ type Stat = StatWithTrend | StatWithoutTrend;
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { hostelId } = useParams();
+  const [hostels, setHostels] = useState<Hostel[]>([]);
+  const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
+  
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      loadHostels();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (hostelId && hostels.length > 0) {
+      const hostel = hostels.find(h => h.id === hostelId);
+      setSelectedHostel(hostel || null);
+    }
+  }, [hostelId, hostels]);
+
+  const loadHostels = async () => {
+    const data = await hostelService.getHostels();
+    setHostels(data);
+  };
+
   const stats = getDashboardStats(user?.role || 'student');
   const occupancyData = getOccupancyChartData();
   const complaintsData = getComplaintsByCategoryData();
@@ -50,8 +78,51 @@ export default function Dashboard() {
 
   const cardStats: Stat[] = user?.role === 'student' ? studentStats : adminStats;
 
+  // Show hostel setup for admin if no hostels exist
+  if (user?.role === 'admin' && hostels.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card className="glass-card border-primary/20">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Building2 className="w-20 h-20 text-primary mb-6 animate-pulse" />
+            <h2 className="text-2xl font-bold mb-3">Welcome to Medhavi HMS</h2>
+            <p className="text-muted-foreground mb-2 text-center max-w-md">
+              To get started, create your first hostel. Once created, you'll be able to manage rooms, students, and all other features for each hostel.
+            </p>
+            <p className="text-sm text-muted-foreground mb-8 text-center max-w-md">
+              All features like student management, room allocation, complaints, and more will be organized under each hostel.
+            </p>
+            <Button onClick={() => navigate('/hostels/new')} size="lg" className="glass-button">
+              <Plus className="w-5 h-5 mr-2" />
+              Create Your First Hostel
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {selectedHostel && (
+        <Card className="glass-card border-primary/20">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Building2 className="w-8 h-8 text-primary" />
+                <div>
+                  <h3 className="font-semibold text-lg">{selectedHostel.name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedHostel.code}</p>
+                </div>
+              </div>
+              <Button variant="outline" onClick={() => navigate('/hostels')}>
+                Change Hostel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       <div>
         <h1 className="text-3xl font-bold text-foreground">
           Welcome back, {user?.name}!

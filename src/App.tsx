@@ -19,6 +19,8 @@ import ComplaintForm from "./pages/ComplaintForm";
 import Leaves from "./pages/Leaves";
 import LeaveForm from "./pages/LeaveForm";
 import Notifications from "./pages/Notifications";
+import Hostels from "./pages/Hostels";
+import HostelForm from "./pages/HostelForm";
 import Staff from "./pages/Staff";
 import StaffForm from "./pages/StaffForm";
 import MyRoom from "./pages/MyRoom";
@@ -42,6 +44,48 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/login" element={<Login />} />
+            
+            {/* Hostel Management - Admin Only */}
+            <Route
+              path="/hostels"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <DashboardLayout>
+                    <Hostels />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hostels/new"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <DashboardLayout>
+                    <HostelForm />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hostels/edit/:id"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <DashboardLayout>
+                    <HostelForm />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hostel/:hostelId/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'warden']}>
+                  <DashboardLayout>
+                    <Dashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
             
             {/* Protected Routes */}
             <Route

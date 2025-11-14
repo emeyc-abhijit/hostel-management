@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Search,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   const navigation = [
+    { name: 'Hostels', href: '/hostels', icon: Building2, roles: ['admin'] },
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'warden', 'student'] },
     { name: 'Students', href: '/students', icon: Users, roles: ['admin', 'warden'] },
     { name: 'Rooms', href: '/rooms', icon: DoorOpen, roles: ['admin', 'warden'] },

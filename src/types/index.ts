@@ -95,3 +95,16 @@ export interface Notification {
   createdBy: string;
   targetRoles: UserRole[];
 }
+
+export interface Hostel {
+  id: string;
+  name: string;
+  code: string;
+  address: string;
+  capacity: number;
+  occupied: number;
+  warden?: string;
+  wardenPhone?: string;
+  facilities: string[];
+  createdAt: string;
+}
