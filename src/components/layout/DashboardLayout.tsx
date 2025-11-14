@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHostel } from '@/contexts/HostelContext';
 import {
   LayoutDashboard,
   Users,
@@ -8,7 +9,6 @@ import {
   CreditCard,
   MessageSquare,
   Calendar,
-  ClipboardList,
   Bell,
   UserCog,
   LogOut,
@@ -16,6 +16,9 @@ import {
   X,
   Search,
   Building2,
+  ChevronRight,
+  ChevronDown,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,37 +32,43 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, logout } = useAuth();
+  const { selectedHostel, setSelectedHostel, hostels } = useHostel();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedHostel, setExpandedHostel] = useState<string | null>(selectedHostel?.id || null);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const navigation = [
-    { name: 'Hostels', href: '/hostels', icon: Building2, roles: ['admin'] },
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'warden', 'student'] },
+  const hostelFeatures = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'warden'] },
     { name: 'Students', href: '/students', icon: Users, roles: ['admin', 'warden'] },
     { name: 'Rooms', href: '/rooms', icon: DoorOpen, roles: ['admin', 'warden'] },
     { name: 'Fees', href: '/fees', icon: CreditCard, roles: ['admin', 'warden'] },
-    { name: 'Complaints', href: '/complaints', icon: MessageSquare, roles: ['admin', 'warden', 'student'] },
-    { name: 'Leaves', href: '/leaves', icon: Calendar, roles: ['admin', 'warden', 'student'] },
+    { name: 'Complaints', href: '/complaints', icon: MessageSquare, roles: ['admin', 'warden'] },
+    { name: 'Leaves', href: '/leaves', icon: Calendar, roles: ['admin', 'warden'] },
     { name: 'Staff', href: '/staff', icon: UserCog, roles: ['admin'] },
     { name: 'Notifications', href: '/notifications', icon: Bell, roles: ['admin', 'warden'] },
-    
-    // Student-specific routes
-    { name: 'My Room', href: '/my-room', icon: DoorOpen, roles: ['student'] },
-    { name: 'My Fees', href: '/my-fees', icon: CreditCard, roles: ['student'] },
-    { name: 'My Complaints', href: '/my-complaints', icon: MessageSquare, roles: ['student'] },
-    { name: 'My Leaves', href: '/my-leaves', icon: Calendar, roles: ['student'] },
-    
   ];
 
-  const filteredNavigation = navigation.filter(
-    (item) => user && item.roles.includes(user.role)
-  );
+  const studentNavigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'My Room', href: '/my-room', icon: DoorOpen },
+    { name: 'My Fees', href: '/my-fees', icon: CreditCard },
+    { name: 'My Complaints', href: '/my-complaints', icon: MessageSquare },
+    { name: 'My Leaves', href: '/my-leaves', icon: Calendar },
+  ];
+
+  const handleHostelClick = (hostelId: string) => {
+    const hostel = hostels.find(h => h.id === hostelId);
+    if (hostel) {
+      setSelectedHostel(hostel);
+      setExpandedHostel(expandedHostel === hostelId ? null : hostelId);
+    }
+  };
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -71,25 +80,115 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </h1>
         </div>
         
-        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {filteredNavigation.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
-                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+        <nav className="flex-1 space-y-2 overflow-y-auto p-4">
+          {user?.role === 'student' ? (
+            // Student view - simple navigation
+            studentNavigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                    isActive
+                      ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
+                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.name}
+                </Link>
+              );
+            })
+          ) : (
+            // Admin/Warden view - hostel-based navigation
+            <>
+              <div className="flex items-center justify-between mb-3 px-2">
+                <span className="text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+                  Hostels
+                </span>
+                {user?.role === 'admin' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                    onClick={() => navigate('/hostels')}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 )}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.name}
-              </Link>
-            );
-          })}
+              </div>
+
+              {hostels.length === 0 ? (
+                <div className="px-3 py-4 text-sm text-sidebar-foreground/60 text-center">
+                  <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="mb-2">No hostels yet</p>
+                  {user?.role === 'admin' && (
+                    <Button
+                      size="sm"
+                      onClick={() => navigate('/hostels')}
+                      className="mt-2"
+                    >
+                      Create Hostel
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                hostels.map((hostel) => {
+                  const isExpanded = expandedHostel === hostel.id;
+                  const isSelected = selectedHostel?.id === hostel.id;
+
+                  return (
+                    <div key={hostel.id} className="space-y-1">
+                      <button
+                        onClick={() => handleHostelClick(hostel.id)}
+                        className={cn(
+                          'flex items-center gap-2 w-full rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                          isSelected
+                            ? 'bg-sidebar-accent text-sidebar-foreground'
+                            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                        )}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 shrink-0" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 shrink-0" />
+                        )}
+                        <Building2 className="h-5 w-5 shrink-0" />
+                        <span className="truncate">{hostel.name}</span>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="ml-6 space-y-1 border-l border-sidebar-border pl-3">
+                          {hostelFeatures
+                            .filter((feature) => user && feature.roles.includes(user.role))
+                            .map((feature) => {
+                              const isActive = location.pathname === feature.href;
+                              return (
+                                <Link
+                                  key={feature.name}
+                                  to={feature.href}
+                                  className={cn(
+                                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
+                                    isActive
+                                      ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
+                                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                                  )}
+                                >
+                                  <feature.icon className="h-4 w-4" />
+                                  {feature.name}
+                                </Link>
+                              );
+                            })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </>
+          )}
         </nav>
 
           <div className="border-t border-sidebar-border p-4">
@@ -141,26 +240,102 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </Button>
           </div>
           
-          <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-            {filteredNavigation.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+          <nav className="flex-1 space-y-2 overflow-y-auto p-4">
+            {user?.role === 'student' ? (
+              studentNavigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.name}
+                  </Link>
+                );
+              })
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-3 px-2">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase">
+                    Hostels
+                  </span>
+                  {user?.role === 'admin' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0"
+                      onClick={() => {
+                        navigate('/hostels');
+                        setSidebarOpen(false);
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
                   )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.name}
-                </Link>
-              );
-            })}
+                </div>
+
+                {hostels.map((hostel) => {
+                  const isExpanded = expandedHostel === hostel.id;
+                  const isSelected = selectedHostel?.id === hostel.id;
+
+                  return (
+                    <div key={hostel.id} className="space-y-1">
+                      <button
+                        onClick={() => handleHostelClick(hostel.id)}
+                        className={cn(
+                          'flex items-center gap-2 w-full rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                          isSelected
+                            ? 'bg-muted text-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        )}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 shrink-0" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 shrink-0" />
+                        )}
+                        <Building2 className="h-5 w-5 shrink-0" />
+                        <span className="truncate">{hostel.name}</span>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="ml-6 space-y-1 border-l border-border pl-3">
+                          {hostelFeatures
+                            .filter((feature) => user && feature.roles.includes(user.role))
+                            .map((feature) => {
+                              const isActive = location.pathname === feature.href;
+                              return (
+                                <Link
+                                  key={feature.name}
+                                  to={feature.href}
+                                  onClick={() => setSidebarOpen(false)}
+                                  className={cn(
+                                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                                    isActive
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                  )}
+                                >
+                                  <feature.icon className="h-4 w-4" />
+                                  {feature.name}
+                                </Link>
+                              );
+                            })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </nav>
 
           <div className="border-t border-border p-4">
