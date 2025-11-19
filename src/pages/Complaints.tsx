@@ -5,9 +5,15 @@ import { Plus } from 'lucide-react';
 import { Complaint } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { ComplaintWorkflow } from '@/components/ComplaintWorkflow';
+import { ComplaintDetailDialog } from '@/components/ComplaintDetailDialog';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Complaints() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   
   // Mock data
   const complaints: Complaint[] = [
@@ -81,6 +87,35 @@ export default function Complaints() {
     }
   };
 
+  const handleViewDetails = (complaint: Complaint) => {
+    setSelectedComplaint(complaint);
+    setIsDetailDialogOpen(true);
+  };
+
+  const handleAssign = (complaint: Complaint) => {
+    // Determine next stage
+    let nextStage = '';
+    if (!complaint.wardenReviewedAt) {
+      nextStage = 'Warden';
+    } else if (!complaint.adminReviewedAt) {
+      nextStage = 'Admin';
+    } else if (!complaint.higherManagementReviewedAt) {
+      nextStage = 'Higher Management';
+    }
+
+    toast({
+      title: 'Complaint assigned',
+      description: `Complaint has been forwarded to ${nextStage} for review.`,
+    });
+  };
+
+  const handleMarkResolved = (complaintId: string) => {
+    toast({
+      title: 'Complaint resolved',
+      description: 'The complaint has been marked as resolved.',
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -129,16 +164,16 @@ export default function Complaints() {
                 )}
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleViewDetails(complaint)}>
                   View Details
                 </Button>
                 {complaint.status === 'open' && (
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => handleAssign(complaint)}>
                     Assign
                   </Button>
                 )}
                 {complaint.status === 'in-progress' && (
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => handleMarkResolved(complaint.id)}>
                     Mark Resolved
                   </Button>
                 )}
@@ -147,6 +182,12 @@ export default function Complaints() {
           </Card>
         ))}
       </div>
+
+      <ComplaintDetailDialog 
+        complaint={selectedComplaint!}
+        open={isDetailDialogOpen}
+        onOpenChange={setIsDetailDialogOpen}
+      />
     </div>
   );
 }

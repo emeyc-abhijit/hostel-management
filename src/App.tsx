@@ -37,6 +37,8 @@ import HostelAdmissions from "./pages/HostelAdmissions";
 import EntryExitForm from "./pages/EntryExitForm";
 import MyEntryExit from "./pages/MyEntryExit";
 import EntryExitApplications from "./pages/EntryExitApplications";
+import EntryApplication from "./pages/EntryApplication";
+import ExitForm from "./pages/ExitForm";
 
 const queryClient = new QueryClient();
 
@@ -271,6 +273,26 @@ const App = () => (
                 <ProtectedRoute allowedRoles={['student']}>
                   <DashboardLayout>
                     <EntryExitForm />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/entry-exit/entry"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <DashboardLayout>
+                    <EntryApplication />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/entry-exit/exit"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <DashboardLayout>
+                    <ExitForm />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

@@ -3,15 +3,26 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Download, Eye } from 'lucide-react';
 import { mockAdmissions } from '@/lib/mockData';
+import { useState } from 'react';
+import { HostelAdmission } from '@/types';
+import { AdmissionFormPrint } from '@/components/AdmissionFormPrint';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 export default function HostelAdmissions() {
-  const handlePrint = (admissionId: string) => {
-    console.log('Printing admission form:', admissionId);
-    window.print();
+  const [selectedAdmission, setSelectedAdmission] = useState<HostelAdmission | null>(null);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+
+  const handlePrint = (admission: HostelAdmission) => {
+    setSelectedAdmission(admission);
+    setIsPrintDialogOpen(true);
+    setTimeout(() => {
+      window.print();
+    }, 500);
   };
 
-  const handleView = (admissionId: string) => {
-    console.log('Viewing admission form:', admissionId);
+  const handleView = (admission: HostelAdmission) => {
+    setSelectedAdmission(admission);
+    setIsPrintDialogOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -80,7 +91,7 @@ export default function HostelAdmissions() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handleView(admission.id)}
+                  onClick={() => handleView(admission)}
                 >
                   <Eye className="mr-2 h-4 w-4" />
                   View Details
@@ -88,7 +99,7 @@ export default function HostelAdmissions() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handlePrint(admission.id)}
+                  onClick={() => handlePrint(admission)}
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Print Form
@@ -108,6 +119,12 @@ export default function HostelAdmissions() {
           </Card>
         ))}
       </div>
+
+      <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedAdmission && <AdmissionFormPrint admission={selectedAdmission} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
