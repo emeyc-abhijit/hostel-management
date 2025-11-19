@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { mockComplaints } from '@/lib/mockData';
 import { useNavigate } from 'react-router-dom';
+import { ComplaintWorkflow } from '@/components/ComplaintWorkflow';
 
 export default function MyComplaints() {
   const { user } = useAuth();
@@ -66,7 +67,8 @@ export default function MyComplaints() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{complaint.description}</p>
+              <ComplaintWorkflow complaint={complaint} />
+              <p className="text-sm text-muted-foreground mt-4">{complaint.description}</p>
             </CardContent>
           </Card>
         ))}

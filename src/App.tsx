@@ -33,6 +33,10 @@ import Fees from "./pages/Fees";
 import FeeForm from "./pages/FeeForm";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import HostelAdmissions from "./pages/HostelAdmissions";
+import EntryExitForm from "./pages/EntryExitForm";
+import MyEntryExit from "./pages/MyEntryExit";
+import EntryExitApplications from "./pages/EntryExitApplications";
 
 const queryClient = new QueryClient();
 
@@ -262,6 +266,36 @@ const App = () => (
               }
             />
             <Route
+              path="/entry-exit/new"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <DashboardLayout>
+                    <EntryExitForm />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/entry-exit"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'warden']}>
+                  <DashboardLayout>
+                    <EntryExitApplications />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admissions"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'warden']}>
+                  <DashboardLayout>
+                    <HostelAdmissions />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/notifications"
               element={
                 <ProtectedRoute allowedRoles={['admin', 'warden']}>
@@ -299,6 +333,16 @@ const App = () => (
                 <ProtectedRoute allowedRoles={['student']}>
                   <DashboardLayout>
                     <MyLeaves />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-entry-exit"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <DashboardLayout>
+                    <MyEntryExit />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

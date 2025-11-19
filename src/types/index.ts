@@ -59,6 +59,14 @@ export interface Complaint {
   createdAt: string;
   updatedAt: string;
   assignedTo?: string;
+  // Workflow tracking
+  wardenReviewedAt?: string;
+  wardenReviewedBy?: string;
+  adminReviewedAt?: string;
+  adminReviewedBy?: string;
+  higherManagementReviewedAt?: string;
+  higherManagementReviewedBy?: string;
+  escalationDeadline?: string;
 }
 
 export interface LeaveRequest {
@@ -107,4 +115,39 @@ export interface Hostel {
   wardenPhone?: string;
   facilities: string[];
   createdAt: string;
+}
+
+export interface HostelAdmission {
+  id: string;
+  studentName: string;
+  email: string;
+  phone: string;
+  course: string;
+  year: number;
+  guardianName: string;
+  guardianPhone: string;
+  address: string;
+  preferredHostel: string;
+  roomType: 'single' | 'double' | 'triple' | 'quad';
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}
+
+export interface EntryExitRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  requestType: 'entry' | 'exit';
+  startDate: string;
+  endDate: string;
+  purpose: string;
+  destination?: string;
+  contactDuringAbsence?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  remarks?: string;
 }
