@@ -82,10 +82,11 @@ export default function Login() {
           
           <div className="mt-6 space-y-2 rounded-lg bg-muted p-4 text-xs text-muted-foreground">
             <p className="font-medium">Demo Credentials:</p>
-            <p>Admin: admin@medhavi.edu</p>
-            <p>Warden: warden@medhavi.edu</p>
-            <p>Student: student@medhavi.edu</p>
-            <p className="mt-2">Password: any</p>
+            <p>Admin: <span className="font-mono">admin@medhavi.edu</span></p>
+            <p>Warden: <span className="font-mono">warden@medhavi.edu</span></p>
+            <p>Student: <span className="font-mono">student@medhavi.edu</span></p>
+            <p className="mt-2">Password: <span className="font-mono">password123</span></p>
+            <p className="mt-3 text-xs italic">Run backend seed script first: <span className="font-mono">npm run seed:users</span></p>
           </div>
         </CardContent>
       </Card>

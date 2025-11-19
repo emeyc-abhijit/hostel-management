@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { Complaint } from '@/types';
 import { useNavigate } from 'react-router-dom';
+import { ComplaintWorkflow } from '@/components/ComplaintWorkflow';
 
 export default function Complaints() {
   const navigate = useNavigate();
@@ -115,6 +116,7 @@ export default function Complaints() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              <ComplaintWorkflow complaint={complaint} />
               <p className="text-sm">{complaint.description}</p>
               <div className="flex items-center gap-4 text-sm">
                 <Badge variant="secondary" className="capitalize">

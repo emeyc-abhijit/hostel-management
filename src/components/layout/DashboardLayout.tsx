@@ -50,6 +50,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { name: 'Fees', href: '/fees', icon: CreditCard, roles: ['admin', 'warden'] },
     { name: 'Complaints', href: '/complaints', icon: MessageSquare, roles: ['admin', 'warden'] },
     { name: 'Leaves', href: '/leaves', icon: Calendar, roles: ['admin', 'warden'] },
+    { name: 'Entry/Exit', href: '/entry-exit', icon: DoorOpen, roles: ['admin', 'warden'] },
+    { name: 'Admissions', href: '/admissions', icon: Users, roles: ['admin', 'warden'] },
     { name: 'Staff', href: '/staff', icon: UserCog, roles: ['admin'] },
     { name: 'Notifications', href: '/notifications', icon: Bell, roles: ['admin', 'warden'] },
   ];
@@ -60,6 +62,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { name: 'My Fees', href: '/my-fees', icon: CreditCard },
     { name: 'My Complaints', href: '/my-complaints', icon: MessageSquare },
     { name: 'My Leaves', href: '/my-leaves', icon: Calendar },
+    { name: 'Entry/Exit Requests', href: '/my-entry-exit', icon: DoorOpen },
   ];
 
   const handleHostelClick = (hostelId: string) => {
