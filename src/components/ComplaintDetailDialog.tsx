@@ -11,6 +11,9 @@ interface ComplaintDetailDialogProps {
 }
 
 export function ComplaintDetailDialog({ complaint, open, onOpenChange }: ComplaintDetailDialogProps) {
+  // Guard: complaint may be null when dialog opens/closes asynchronously.
+  // Return null to avoid runtime errors reading properties on a null object.
+  if (!complaint) return null;
   const getStatusColor = (status: Complaint['status']) => {
     switch (status) {
       case 'open':
