@@ -14,6 +14,7 @@ import complaintRoutes from "./routes/complaints.js";
 import noticeRoutes from "./routes/notices.js";
 import feeRoutes from "./routes/fees.js";
 import attendanceRoutes from "./routes/attendance.js";
+import chatRoutes from "./routes/chat.js";
 
 // Middleware
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
@@ -44,6 +45,7 @@ app.use("/api/complaints", complaintRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/fees", feeRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/chat", chatRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
